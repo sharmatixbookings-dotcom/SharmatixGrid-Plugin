@@ -1,0 +1,49 @@
+# Carpetas de compilacion
+build/
+build-*/
+cmake-build-*/
+out/
+Builds/
+bin/
+
+# JUCE / Projucer (no se usan con CMake, pero se excluyen por si acaso)
+JuceLibraryCode/
+*.jucer.bak
+*.xcodeproj/
+*.xcworkspace/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+_deps/
+compile_commands.json
+cmake_install.cmake
+install_manifest.txt
+
+# Visual Studio / VS Code / CLion / Xcode
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.sln.docstates
+xcuserdata/
+
+# Objetos y binarios
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.dylib
+*.exe
+*.pdb
+*.ilk
+*.vst3
+*.component
+*.app
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
