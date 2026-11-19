@@ -4,120 +4,56 @@
 #include "PluginProcessor.h"
 #include "PsyLookAndFeel.h"
 
-//==============================================================================
-/** Boton con borde luminoso (neon). */
-class GlowButton : public juce::Button
+class SharmatixMelodiesAudioEditor : public juce::AudioProcessorEditor
 {
 public:
-    GlowButton (const juce::String& text, juce::Colour neon, bool isLarge = false);
-
-    void setPulse (float newPulse) { pulse = newPulse; repaint(); }
-    void paintButton (juce::Graphics&, bool isMouseOver, bool isButtonDown) override;
-
-private:
-    juce::Colour colour;
-    float pulse = 0.0f;
-    bool large = false;
-};
-
-//==============================================================================
-/** Zona desde la que se arrastra el .mid al DAW. */
-class DragPad : public juce::Component
-{
-public:
-    DragPad();
-
-    std::function<void()> onDragStart;
-
-    void paint (juce::Graphics&) override;
-    void mouseDown (const juce::MouseEvent&) override;
-    void mouseDrag (const juce::MouseEvent&) override;
-    void mouseUp (const juce::MouseEvent&) override;
-    void mouseEnter (const juce::MouseEvent&) override { hover = true;  repaint(); }
-    void mouseExit  (const juce::MouseEvent&) override { hover = false; repaint(); }
-
-private:
-    bool dragging = false;
-    bool hover = false;
-};
-
-//==============================================================================
-/** Cuadricula 16 steps x notas de la escala. Click / arrastre para pintar o borrar bloques. */
-class GridComponent : public juce::Component
-{
-public:
-    explicit GridComponent (SharmatixGridAudioProcessor& p) : processor (p) {}
-
-    void paint (juce::Graphics&) override;
-    void mouseDown (const juce::MouseEvent&) override;
-    void mouseDrag (const juce::MouseEvent&) override;
-
-private:
-    static constexpr int labelWidth = 46;
-
-    juce::Rectangle<float> getGridArea() const;
-    void paintAt (const juce::MouseEvent&, bool isFirstClick);
-
-    SharmatixGridAudioProcessor& processor;
-    bool paintAdds = true;
-    int lastStep = -1, lastPitch = -1;
-};
-
-//==============================================================================
-class SharmatixGridAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                          public juce::DragAndDropContainer,
-                                          public juce::FileDragAndDropTarget,
-                                          private juce::Timer
-{
-public:
-    explicit SharmatixGridAudioProcessorEditor (SharmatixGridAudioProcessor&);
-    ~SharmatixGridAudioProcessorEditor() override;
+    explicit SharmatixMelodiesAudioEditor (SharmatixMelodiesAudioProcessor&);
+    ~SharmatixMelodiesAudioEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    // Arrastrar un .mid DENTRO del plugin para importarlo
-    bool isInterestedInFileDrag (const juce::StringArray& files) override;
-    void fileDragEnter (const juce::StringArray&, int, int) override;
-    void fileDragExit (const juce::StringArray&) override;
-    void filesDropped (const juce::StringArray& files, int x, int y) override;
-
 private:
-    using SliderAttachment   = juce::AudioProcessorValueTreeState::SliderAttachment;
-    using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
-    using ButtonAttachment   = juce::AudioProcessorValueTreeState::ButtonAttachment;
+    SharmatixMelodiesAudioProcessor& audioProcessor;
+    PsyLookAndFeel psyLookAndFeel;
 
-    struct Caption { juce::Rectangle<int> area; juce::String text; };
+    juce::Label titleLabel;
+    juce::Label subtitleLabel;
 
-    void timerCallback() override;
-    void renderBackground();
-    void setStatus (const juce::String& text);
-    void configureIncDec (juce::Slider&);
+    juce::ComboBox presetBox;
+    juce::TextButton prevPresetButton { "<" };
+    juce::TextButton nextPresetButton { ">" };
+    juce::TextButton savePresetButton { "Save" };
+    juce::TextButton loadPresetButton { "Load" };
 
-    SharmatixGridAudioProcessor& processor;
-    PsyLookAndFeel lnf;
+    juce::ComboBox scaleBox;
+    juce::ComboBox rootBox;
+    juce::ComboBox modeBox;
 
-    GridComponent grid;
-    juce::ComboBox scaleBox, rootBox;
-    juce::Slider octaveSlider, rangeSlider, bpmSlider, densitySlider;
-    juce::ToggleButton playButton { "MIDI OUT" };
-    juce::Label stepsLabel, status;
-    GlowButton generateButton { "GENERATE", psy::magenta, true };
-    GlowButton clearButton    { "CLEAR",    psy::cyan };
-    GlowButton saveButton     { "SAVE .MID", psy::violet };
-    DragPad dragPad;
+    juce::Slider octaveSlider;
+    juce::Slider rangeSlider;
+    juce::Slider lengthSlider;
+    juce::Slider densitySlider;
+    juce::Slider gateSlider;
 
-    std::unique_ptr<ComboBoxAttachment> scaleAttach, rootAttach;
-    std::unique_ptr<SliderAttachment>   octaveAttach, rangeAttach, bpmAttach, densityAttach;
-    std::unique_ptr<ButtonAttachment>   playAttach;
+    juce::TextButton generateButton { "GENERATE" };
+    juce::TextButton clearButton { "CLEAR" };
 
-    std::unique_ptr<juce::FileChooser> chooser;
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    using ComboAttachment  = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
 
-    juce::Image background;
-    std::vector<Caption> captions;
-    bool  dropHighlight = false;
-    float phase = 0.0f;
-    int   lastVersion = -1, lastStepKey = -2, statusTicks = 0;
+    std::unique_ptr<ComboAttachment> scaleAttachment;
+    std::unique_ptr<ComboAttachment> rootAttachment;
+    std::unique_ptr<ComboAttachment> modeAttachment;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SharmatixGridAudioProcessorEditor)
+    std::unique_ptr<SliderAttachment> octaveAttachment;
+    std::unique_ptr<SliderAttachment> rangeAttachment;
+    std::unique_ptr<SliderAttachment> lengthAttachment;
+    std::unique_ptr<SliderAttachment> densityAttachment;
+    std::unique_ptr<SliderAttachment> gateAttachment;
+
+    void refreshPresetList();
+    void configureSlider (juce::Slider& s, const juce::String& suffix);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SharmatixMelodiesAudioEditor)
 };
