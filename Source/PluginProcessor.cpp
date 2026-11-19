@@ -221,21 +221,11 @@ void SharmatixMelodiesAudioProcessor::releaseResources() {}
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool SharmatixMelodiesAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-   #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
-    return true;
-   #else
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
-        return false;
+    if (layouts.getMainInputChannelSet().isDisabled()
+        && layouts.getMainOutputChannelSet().isDisabled())
+        return true;
 
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainInputChannelSet() != layouts.getMainOutputChannelSet())
-        return false;
-   #endif
-
-    return true;
-   #endif
+    return false;
 }
 #endif
 
