@@ -268,7 +268,7 @@ void SharmatixMelodiesAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
 
     const int numSamples = buffer.getNumSamples();
     const int len = juce::jlimit (4, maxSteps, (int) *apvts.getRawParameterValue ("length"));
-    const float gate = juce::jlimit (0.15f, 0.95f, *apvts.getRawParameterValue ("gate"));
+    const float gate = juce::jlimit (0.15f, 0.95f, static_cast<float> (*apvts.getRawParameterValue ("gate")));
 
     const double secondsPerBeat = 60.0 / juce::jmax (40.0, bpm);
     const double samplesPerStep = (secondsPerBeat * 0.25) * currentSampleRate;
